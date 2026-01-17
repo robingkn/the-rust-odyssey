@@ -2,7 +2,7 @@
 
 \begin{center}
 \vspace*{2cm}
-\includegraphics[width=0.7\textwidth]{../assets/cover.png}
+\includegraphics[width=0.7\textwidth]{assets/cover.png}
 \end{center}
 
 \newpage
