@@ -115,6 +115,8 @@ help: consider cloning the value if the performance cost is acceptable
   |               ++++++++
 ```
 
+(The note about macro expansion can be ignored - it's just showing that println! is implemented as a macro. The key error is above.)
+
 **What it tells you:**
 - You moved `s` on line 3
 - You tried to use it on line 4

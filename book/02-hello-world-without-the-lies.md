@@ -102,11 +102,11 @@ fn read_file(path: &str) -> std::io::Result<String> {
     let mut contents = String::new();
     
     // This won't compile:
-    // let line = &contents;
-    // file.read_to_string(&mut contents)?;
-    // println!("{}", line);  // Error: contents borrowed mutably
+    // let first_char = contents.chars().next();  // Immutable borrow
+    // file.read_to_string(&mut contents)?;       // Mutable borrow - Error!
+    // println!("{:?}", first_char);
     
-    std::io::Read::read_to_string(&mut file, &mut contents)?;
+    file.read_to_string(&mut contents)?;
     Ok(contents)
 }
 ```
@@ -117,11 +117,8 @@ The compiler prevents you from holding an immutable reference while mutating. In
 Functions that can fail return `Result<T, E>`. You must handle the error or explicitly propagate it with `?`.
 
 ```rust
-use std::fs::File;
-use std::io::Read;
-
-fn load_config(path: &str) -> Result<String, std::io::Error> {
-    let mut file = File::open(path)?;  // ? propagates error
+fn read_file(path: &str) -> std::io::Result<String> {
+    let mut file = std::fs::File::open(path)?;
     let mut contents = String::new();
     file.read_to_string(&mut contents)?;
     Ok(contents)

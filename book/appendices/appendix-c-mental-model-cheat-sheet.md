@@ -63,7 +63,7 @@ You'll need to adjust your mental model. This cheat sheet shows you how.
 | `std::shared_ptr<T>` (thread-safe) | `Arc<T>` | Atomic reference-counted |
 | `new T` | `Box::new(T)` | Heap allocation |
 | `delete ptr` | `drop(ptr)` | Usually automatic |
-| `std::move(x)` | `x` (move is default) | Move is implicit in Rust |
+| `std::move(x)` | `x` (move is default) | Move is implicit in Rust on assignment; C++ move is an explicit cast to rvalue reference |
 
 **Key differences:**
 - Rust moves by default; C++ copies by default
@@ -76,8 +76,8 @@ You'll need to adjust your mental model. This cheat sheet shows you how.
 |-------------|-----------------|-------|
 | `void f(T& x)` | `fn f(x: &mut T)` | Mutable reference |
 | `void f(const T& x)` | `fn f(x: &T)` | Immutable reference |
-| Multiple `const T&` | Multiple `&T` | Allowed |
-| Multiple `T&` | One `&mut T` | Only one mutable borrow at a time |
+| Multiple `const T&` | Multiple `&T` | Allowed in both |
+| Multiple mutable `T&` | One `&mut T` | C++ allows multiple mutable refs (but concurrent mutation is UB); Rust prevents it |
 | Return reference to local | Compile error | Rust prevents this |
 | Dangling pointer | Compile error | Rust prevents this |
 
@@ -114,7 +114,7 @@ You'll need to adjust your mental model. This cheat sheet shows you how.
 | Exception propagation | `?` operator | Explicit propagation |
 | `noexcept` | No equivalent | Rust has no exceptions |
 | `std::optional<T>` | `Option<T>` | Explicit null handling |
-| `nullptr` | `None` | Part of `Option<T>` |
+| `nullptr` | `None` | Part of `Option<T>`; Rust's Option is more general than C++ null pointers |
 | Null pointer check | `if let Some(x)` | Compiler enforces |
 
 **Key differences:**

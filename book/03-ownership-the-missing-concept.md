@@ -57,7 +57,7 @@ When you pass a reference or a raw pointer, you're borrowing—but the compiler 
 ```cpp
 Widget* get_widget() {
     Widget w;
-    return &w;  // Dangling pointer. Compiler might warn, but won't stop you.
+    return &w;  // Dangling pointer. Modern compilers error on this.
 }
 ```
 
@@ -164,6 +164,7 @@ use std::rc::Rc;
 fn main() {
     let data = Rc::new(vec![1, 2, 3]);
     let data2 = Rc::clone(&data);  // Increment reference count
+                                    // (Preferred over data.clone() for clarity)
     
     println!("{:?}", data);
     println!("{:?}", data2);

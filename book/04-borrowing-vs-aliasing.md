@@ -37,7 +37,8 @@ std::vector<int> vec = {1, 2, 3};
 const int& a = vec[0];
 const int& b = vec[0];
 int& c = vec[0];
-// All valid. All aliases to the same memory.
+// All valid. But modifying through c while a or b exist
+// can lead to surprising behavior if the vector reallocates.
 ```
 
 **Mutability is a property of the reference.**  
@@ -181,6 +182,10 @@ impl Cache {
         self.data.borrow().get(index).cloned()
     }
 }
+
+// Note: RefCell checks borrowing rules at runtime.
+// If you call add() while a borrow from get() is active,
+// the program will panic. This is a runtime check, not compile-time.
 ```
 
 `RefCell` checks borrowing rules at runtime. If you violate them (e.g., borrow mutably while already borrowed), the program panics. This is explicit—you know where the runtime checks are.

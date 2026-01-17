@@ -180,7 +180,11 @@ impl Buffer {
     pub fn new(capacity: usize) -> Self {
         let layout = std::alloc::Layout::array::<u8>(capacity).unwrap();
         let data = unsafe {
-            std::alloc::alloc(layout)
+            let ptr = std::alloc::alloc(layout);
+            if ptr.is_null() {
+                std::alloc::handle_alloc_error(layout);
+            }
+            ptr
         };
         Buffer { data, len: 0, capacity }
     }
@@ -210,6 +214,9 @@ impl Drop for Buffer {
         }
     }
 }
+
+// Safety: Buffer is not Send/Sync by default due to raw pointer.
+// In production, you'd need to carefully implement these if needed.
 ```
 
 The `Buffer` API is safe—users can't violate memory safety. The `unsafe` blocks are isolated and auditable.
@@ -220,10 +227,13 @@ Some traits have safety requirements:
 ```rust
 unsafe trait Zeroable {
     // Safe to fill with zeros
+    // Safety: Only implement for types where all-zeros is a valid bit pattern
 }
 
-unsafe impl Zeroable for u32 {}
-unsafe impl Zeroable for i32 {}
+unsafe impl Zeroable for u32 {}  // 0 is a valid u32
+unsafe impl Zeroable for i32 {}  // 0 is a valid i32
+
+// NOT safe for: bool (only 0 and 1 are valid), references, etc.
 
 fn zero_out<T: Zeroable>(value: &mut T) {
     unsafe {

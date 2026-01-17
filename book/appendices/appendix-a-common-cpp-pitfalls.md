@@ -149,7 +149,8 @@ let mut counter = 0;
 
 // This won't compile:
 // let t1 = std::thread::spawn(|| { counter += 1; });
-// Error: closure may outlive the current function
+// Error: closure may outlive the current function, and
+// `counter` cannot be shared between threads safely
 
 // Correct version with Arc<Mutex>:
 use std::sync::{Arc, Mutex};
@@ -218,6 +219,10 @@ match w {
 if let Some(widget) = w {
     widget.process();
 }
+
+// Note: If returning a reference instead of owned value:
+// fn find_widget_ref(name: &str) -> Option<&Widget>
+// The lifetime of the reference is tied to the source.
 ```
 
 `Option<T>` makes null explicit. You must handle the `None` case.

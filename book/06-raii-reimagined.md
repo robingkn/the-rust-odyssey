@@ -167,24 +167,13 @@ You implement `Drop` for custom cleanup logic.
 ```rust
 use std::sync::Mutex;
 
-struct Guard<'a> {
-    lock: &'a Mutex<i32>,
-}
-
-impl<'a> Drop for Guard<'a> {
-    fn drop(&mut self) {
-        println!("Releasing lock");
-        // Lock released automatically when Guard is dropped
-    }
-}
-
 fn critical_section(lock: &Mutex<i32>) {
-    let guard = lock.lock().unwrap();
-    // Critical section
-}  // guard.drop() called, lock released
+    let mut guard = lock.lock().unwrap();
+    *guard += 1;
+}  // guard.drop() called here, releasing the lock
 ```
 
-The lock is released when `guard` goes out of scope. You can't forget.
+The standard library's `MutexGuard` implements `Drop` to release the lock. You rarely need to implement custom lock guards.
 
 **No copy for RAII types.**  
 Types that manage resources don't implement `Copy`. You must explicitly clone or move.
@@ -228,7 +217,7 @@ fn main() {
 - Implement `Drop` for custom cleanup logic
 
 **Pitfalls:**
-- You can't implement both `Drop` and `Copy`—they're mutually exclusive
+- You can't implement both `Drop` and `Copy`—they're mutually exclusive (Copy types must be trivially copyable; Drop types need cleanup logic)
 - `Drop` can't fail—no exceptions, so handle errors before dropping
 - Circular references with `Rc` cause memory leaks—use `Weak` to break cycles
 - The compiler prevents use-after-move, unlike C++ `std::move`

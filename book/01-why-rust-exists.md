@@ -96,8 +96,8 @@ fn process_data() {
 }
 
 fn consume(v: Vec<i32>) {
-    // v is dropped here
-}
+    // Use v here
+}  // v is dropped here
 ```
 
 The compiler knows `data` was moved into `consume`. Trying to use it afterward is a compile error, not undefined behavior.
@@ -114,6 +114,7 @@ fn get_first(v: &Vec<i32>) -> &i32 {
 // fn dangling() -> &i32 {
 //     let v = vec![1, 2, 3];
 //     &v[0]  // Error: v doesn't live long enough
+//            // (The reference would outlive v - see Chapter 5)
 // }
 ```
 
@@ -151,7 +152,7 @@ You must satisfy the compiler before your code runs. This is slower when prototy
 **Pitfalls:**
 - Fighting the compiler means you're trying to do something unsafe
 - The borrow checker isn't wrong—it's enforcing invariants you'd maintain manually in C++
-- Cloning to satisfy the compiler isn't always wrong—sometimes it's the correct solution
+- Cloning to satisfy the compiler isn't always wrong—sometimes it's the correct solution (especially for small types or when simplicity matters more than performance)
 
 Rust doesn't make you a better programmer. It makes the compiler enforce what you already know you should do.
 

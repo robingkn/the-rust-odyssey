@@ -205,6 +205,9 @@ let handles: Vec<_> = (0..10).map(|_| {
     let counter = Arc::clone(&counter);
     thread::spawn(move || {
         let mut num = counter.lock().unwrap();
+        // Note: lock() returns Result because the mutex can be "poisoned"
+        // if a thread panicked while holding the lock. unwrap() is
+        // acceptable here because we're not doing anything that can panic.
         *num += 1;
     })
 }).collect();
@@ -330,7 +333,6 @@ println!("Result: {}", counter.load(Ordering::SeqCst));
 **Pitfalls:**
 - `Rc` is not thread-safe—use `Arc` instead
 - `RefCell` is not thread-safe—use `Mutex` instead
-- Holding a `Mutex` guard across `.await` can cause deadlocks
 - The compiler prevents data races, not deadlocks or race conditions
 
 Rust eliminates data races at compile time. The cost is that you must structure your code to satisfy the type system.

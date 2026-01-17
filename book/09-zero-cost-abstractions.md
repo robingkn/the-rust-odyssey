@@ -66,7 +66,7 @@ virtual void process() = 0;  // Vtable lookup on every call
 Even if you never throw, exception handling adds code size and complexity. Some codebases disable exceptions entirely.
 
 **Shared pointers are expensive.**  
-Atomic reference counting has overhead. Every copy, every assignment, every destruction touches shared state.
+Atomic operations have overhead compared to non-atomic operations. If you're copying `shared_ptr` in a tight loop, you're paying for synchronization on every copy—this can become a bottleneck in highly concurrent scenarios.
 
 This model works because:
 - Most abstractions are zero-cost
@@ -171,16 +171,10 @@ let sum: i32 = numbers.iter()
     .map(|&x| x * 2)
     .sum();
 
-// Compiles to the same code as:
-let mut sum = 0;
-for &x in &numbers {
-    if x % 2 == 0 {
-        sum += x * 2;
-    }
-}
+// With optimizations enabled, this typically compiles to code
+// as efficient as a hand-written loop. You can verify this by
+// checking the assembly output.
 ```
-
-The abstraction is free. The compiler optimizes iterator chains into tight loops.
 
 **No hidden allocations.**  
 Rust doesn't allocate unless you explicitly use heap types:

@@ -123,7 +123,8 @@ When the borrow checker fights you, cloning might be the right solution:
 use std::collections::HashMap;
 
 fn process_entries(map: &HashMap<String, i32>) {
-    // Clone the keys to avoid borrowing issues:
+    // Clone the keys - this is a common pattern when you need
+    // to iterate while potentially modifying the map
     let keys: Vec<String> = map.keys().cloned().collect();
     
     for key in keys {

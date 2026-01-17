@@ -130,7 +130,8 @@ A trait defines a set of methods:
 ```rust
 trait Serialize {
     fn to_bytes(&self) -> Vec<u8>;
-    fn from_bytes(data: &[u8]) -> Result<Self, String> where Self: Sized;
+    fn from_bytes(data: &[u8]) -> Result<Self, Box<dyn std::error::Error>> 
+    where Self: Sized;
 }
 ```
 
@@ -147,16 +148,15 @@ impl Serialize for Config {
         format!("{}:{}", self.host, self.port).into_bytes()
     }
     
-    fn from_bytes(data: &[u8]) -> Result<Self, String> {
-        let s = String::from_utf8(data.to_vec())
-            .map_err(|e| e.to_string())?;
+    fn from_bytes(data: &[u8]) -> Result<Self, Box<dyn std::error::Error>> {
+        let s = String::from_utf8(data.to_vec())?;
         let parts: Vec<&str> = s.split(':').collect();
         if parts.len() != 2 {
-            return Err("Invalid format".to_string());
+            return Err("Invalid format".into());
         }
         Ok(Config {
             host: parts[0].to_string(),
-            port: parts[1].parse().map_err(|e| format!("{}", e))?,
+            port: parts[1].parse()?,
         })
     }
 }
@@ -223,6 +223,7 @@ trait Parser {
     fn parse(&self, input: &str) -> Result<Self::Output, Self::Error>;
 }
 
+// Using serde_json crate (external dependency)
 struct JsonParser;
 
 impl Parser for JsonParser {

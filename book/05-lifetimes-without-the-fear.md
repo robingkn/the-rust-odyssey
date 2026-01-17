@@ -131,7 +131,7 @@ fn longest<'a>(s1: &'a str, s2: &'a str) -> &'a str {
 }
 ```
 
-This says: "The returned reference has the same lifetime as the shorter of `s1` and `s2`." The compiler enforces this:
+This says: "The returned reference has a lifetime that is valid for as long as *both* `s1` and `s2` are valid (the intersection of their lifetimes)." The compiler enforces this:
 
 ```rust
 fn main() {
@@ -161,6 +161,8 @@ impl<'a> Parser<'a> {
     
     fn current(&self) -> Option<char> {
         self.input.chars().nth(self.position)
+        // Note: This is O(n). A real parser would use byte indices
+        // or iterate with an iterator. This is simplified for clarity.
     }
 }
 ```

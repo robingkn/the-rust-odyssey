@@ -207,19 +207,20 @@ fn parse_data(input: &str) -> Result<i32, ParseError> {
 }
 ```
 
+Note: In practice, most Rust code uses the `thiserror` crate to derive these implementations automatically. The manual implementation above shows what's happening under the hood.
+
 **Panic for unrecoverable errors.**  
 Use `panic!` for bugs, not for expected errors:
 
 ```rust
-fn get_item(vec: &Vec<i32>, index: usize) -> i32 {
-    if index >= vec.len() {
-        panic!("Index out of bounds: {}", index);
+fn divide(a: i32, b: i32) -> i32 {
+    if b == 0 {
+        panic!("Division by zero - this is a programming error");
     }
-    vec[index]
+    a / b
 }
+// Use panic for programming errors (bugs), not for expected failures
 ```
-
-Panics unwind the stack (by default) and run destructors, but they're not meant to be caught like exceptions.
 
 **Combinators for error handling.**  
 `Result` has methods for common patterns:
