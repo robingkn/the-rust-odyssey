@@ -1,0 +1,117 @@
+name: Build & Release Book
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+env:
+  BOOK_NAME: the-rust-odyssey
+
+jobs:
+  build:
+    name: Build PDF, HTML, EPUB
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Pandoc & LaTeX
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            pandoc \
+            texlive \
+            texlive-latex-extra \
+            texlive-fonts-recommended
+
+      - name: Prepare output directories
+        run: mkdir -p dist/html
+
+      - name: Verify book.txt
+        run: |
+          echo "Building book using manifest:"
+          cat book.txt
+
+      - name: Build PDF
+        run: |
+          pandoc $(cat book.txt) \
+            --toc \
+            --pdf-engine=xelatex \
+            -o dist/${BOOK_NAME}-${{ github.ref_name }}.pdf
+
+      - name: Build EPUB
+        run: |
+          pandoc $(cat book.txt) \
+            --toc \
+            -o dist/${BOOK_NAME}-${{ github.ref_name }}.epub
+
+      - name: Build HTML
+        run: |
+          pandoc $(cat book.txt) \
+            --standalone \
+            --toc \
+            -o dist/html/index.html
+
+      - name: Zip HTML
+        run: |
+          cd dist
+          zip -r ${BOOK_NAME}-${{ github.ref_name }}-html.zip html
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: book-artifacts
+          path: dist/
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: book-artifacts
+          path: dist
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          generate_release_notes: true
+          files: |
+            dist/*.pdf
+            dist/*.epub
+            dist/*-html.zip
+
+  pages:
+    name: Publish HTML to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: book-artifacts
+          path: dist
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/html
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
