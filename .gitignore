@@ -1,0 +1,22 @@
+# Internal authoring artifacts
+.internal/
+
+# IDE
+.vscode/
+.idea/
+
+# Build artifacts
+*.exe
+*.pdb
+*.obj
+*.o
+*.out
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*~
