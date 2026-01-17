@@ -28,13 +28,15 @@ jobs:
           sudo apt-get install -y \
             pandoc \
             texlive \
+            texlive-xetex \
             texlive-latex-extra \
             texlive-fonts-recommended
 
       - name: Prepare output directories
-        run: mkdir -p dist/html
+        run: |
+          mkdir -p dist/html
 
-      - name: Verify book.txt
+      - name: Verify book manifest
         run: |
           echo "Building book using manifest:"
           cat book/book.txt
