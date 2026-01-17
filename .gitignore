@@ -20,3 +20,6 @@ Thumbs.db
 *.tmp
 *.bak
 *~
+
+# Book build artifacts
+dist/
