@@ -1,6 +1,6 @@
 # <Chapter Number>. <Chapter Title>
 
-> One or two sentences that frame the problem from a C++ developer's perspective.
+> One or two sentences that frame the problem from a C++ developer’s perspective.
 > This is not a summary — it is a hook.
 
 ---
@@ -42,4 +42,3 @@ Be fair to C++.
 The goal is understanding — not criticism.
 
 ---
-
