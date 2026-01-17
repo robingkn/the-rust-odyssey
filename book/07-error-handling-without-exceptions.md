@@ -56,7 +56,7 @@ try {
 }
 ```
 
-**Exceptions are expensive (when thrown).**  
+**Exceptions are expensive when thrown.**  
 The happy path is fast—no overhead. But when you throw, the cost is high: stack unwinding, destructor calls, and searching for catch blocks. This is fine if exceptions are rare.
 
 **Exception safety is a discipline.**  

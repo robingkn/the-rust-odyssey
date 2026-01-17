@@ -39,7 +39,7 @@ The cost is:
 In C++, templates are **structural**—they care about what you can do, not what you claim to be.
 
 **Interfaces are implicit.**  
-A template doesn't declare what operations it needs. It just uses them. If the type supports those operations, it works. If not, you get a compile error.
+A template doesn't declare what operations it needs—it just uses them. If the type supports those operations, it works. If not, you get a compile error.
 
 ```cpp
 template<typename T>

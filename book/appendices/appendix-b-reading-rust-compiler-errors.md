@@ -219,7 +219,7 @@ The `^`, `-`, and `|` markers show you exactly where the problem is.
 **4. Read the help text.**  
 Often includes a suggestion or explanation.
 
-**5. Ignore macro expansion notes (at first).**  
+**5. Ignore macro expansion notes initially.**  
 They're usually not relevant to your mistake.
 
 **6. Fix one error at a time.**  

@@ -51,7 +51,7 @@ Rust inverts this completely.
 **You can't defer ownership decisions.**  
 In C++, you can write a function that takes a pointer and figure out ownership later. In Rust, you must decide upfront: does this function borrow, take ownership, or return a reference? The compiler won't let you proceed until you answer.
 
-**The compiler is adversarial (at first).**  
+**The compiler feels adversarial at first.**  
 It rejects code that would compile and run fine in C++. Not because it's wrong, but because it *might* be wrong. The compiler doesn't trust you to get it right at runtime—it demands proof at compile time.
 
 **Mistakes are immediate.**  

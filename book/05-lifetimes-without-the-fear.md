@@ -29,7 +29,7 @@ This works most of the time. Until it doesn't, and you're debugging a crash that
 
 In C++, lifetimes are **implicit**. You track them mentally, not in the type system.
 
-**Lifetimes are obvious (to you).**  
+**Lifetimes are obvious to you.**  
 You know that a reference to a local variable dies when the function returns. You know that a reference into a vector becomes invalid when the vector reallocates. The compiler doesn't track this—you do.
 
 ```cpp
@@ -131,7 +131,7 @@ fn longest<'a>(s1: &'a str, s2: &'a str) -> &'a str {
 }
 ```
 
-This says: "The returned reference has a lifetime that is valid for as long as *both* `s1` and `s2` are valid (the intersection of their lifetimes)." The compiler enforces this:
+This says: "The returned reference has a lifetime valid for as long as *both* `s1` and `s2` are valid (the intersection of their lifetimes)." The compiler enforces this:
 
 ```rust
 fn main() {

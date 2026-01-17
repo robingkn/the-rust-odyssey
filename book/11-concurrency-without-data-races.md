@@ -65,7 +65,7 @@ int* ptr = &counter;
 ```
 
 **Send and Sync are implicit.**  
-Some types are safe to send between threads (`std::string`), some aren't (`std::unique_ptr` to a non-thread-safe type). The compiler doesn't enforce this. You have to know.
+Some types are safe to send between threads (`std::string`), some aren't (like `std::unique_ptr` to a non-thread-safe type). The compiler doesn't enforce this—you have to know.
 
 **Data races are undefined behavior.**  
 If two threads access the same memory, and at least one is writing, and there's no synchronization, you have a data race. The compiler doesn't prevent this. The behavior is undefined.

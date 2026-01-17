@@ -57,7 +57,7 @@ When you pass a reference or a raw pointer, you're borrowing—but the compiler 
 ```cpp
 Widget* get_widget() {
     Widget w;
-    return &w;  // Dangling pointer. Modern compilers error on this.
+    return &w;  // Dangling pointer. Modern compilers warn or error on this.
 }
 ```
 

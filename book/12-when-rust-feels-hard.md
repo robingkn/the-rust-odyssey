@@ -177,7 +177,7 @@ fn safe_processing() {
 }
 ```
 
-**When to use Rust vs C++.**  
+**When to use Rust vs C++.**
 
 Use Rust when:
 - The codebase will live for years

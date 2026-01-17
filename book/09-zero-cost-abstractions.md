@@ -65,8 +65,8 @@ virtual void process() = 0;  // Vtable lookup on every call
 **Exceptions have hidden costs.**  
 Even if you never throw, exception handling adds code size and complexity. Some codebases disable exceptions entirely.
 
-**Shared pointers are expensive.**  
-Atomic operations have overhead compared to non-atomic operations. If you're copying `shared_ptr` in a tight loop, you're paying for synchronization on every copy—this can become a bottleneck in highly concurrent scenarios.
+**Shared pointers have overhead.**  
+Atomic operations are more expensive than non-atomic operations. If you're copying `shared_ptr` in a tight loop, you're paying for synchronization on every copy—this can become a bottleneck in highly concurrent scenarios.
 
 This model works because:
 - Most abstractions are zero-cost
@@ -91,7 +91,7 @@ Even if you never throw, the compiler generates unwinding tables and exception-h
 **Virtual functions prevent optimization.**  
 The compiler can't inline through a virtual call. It can't devirtualize unless it can prove the exact type. Dynamic dispatch limits what the optimizer can do.
 
-**Shared pointers are slower than you think.**  
+**Shared pointers have hidden costs.**  
 Atomic operations are expensive. If you're copying `shared_ptr` in a tight loop, you're paying for synchronization on every copy.
 
 **Move semantics aren't free.**  

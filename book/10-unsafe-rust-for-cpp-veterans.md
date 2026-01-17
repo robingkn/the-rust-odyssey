@@ -103,7 +103,7 @@ This is more restrictive than C++. But it's also more honest: when you see `unsa
 
 Rust makes the boundary between safe and unsafe code explicit. Everything is safe by default. Unsafe operations require an `unsafe` block.
 
-**Unsafe is a keyword.**  
+**Unsafe is explicit.**  
 Five operations require `unsafe`:
 
 1. Dereferencing raw pointers
