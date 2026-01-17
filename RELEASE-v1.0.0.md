@@ -139,7 +139,7 @@ See [LICENSE](LICENSE) file for full details.
 
 ## Distribution
 
-**Primary:** GitHub (https://github.com/[username]/the-rust-odyssey)
+**Primary:** GitHub (https://github.com/robingkn/the-rust-odyssey)
 - Free and open access
 - Readable directly on GitHub
 - Version controlled
