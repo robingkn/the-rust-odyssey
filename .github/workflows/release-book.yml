@@ -37,24 +37,24 @@ jobs:
       - name: Verify book.txt
         run: |
           echo "Building book using manifest:"
-          cat book.txt
+          cat book/book.txt
 
       - name: Build PDF
         run: |
-          pandoc $(cat book.txt) \
+          pandoc $(cat book/book.txt) \
             --toc \
             --pdf-engine=xelatex \
             -o dist/${BOOK_NAME}-${{ github.ref_name }}.pdf
 
       - name: Build EPUB
         run: |
-          pandoc $(cat book.txt) \
+          pandoc $(cat book/book.txt) \
             --toc \
             -o dist/${BOOK_NAME}-${{ github.ref_name }}.epub
 
       - name: Build HTML
         run: |
-          pandoc $(cat book.txt) \
+          pandoc $(cat book/book.txt) \
             --standalone \
             --toc \
             -o dist/html/index.html
