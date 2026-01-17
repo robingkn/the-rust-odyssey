@@ -1,0 +1,6 @@
+book/00-preface.md
+book/00-how-to-read-this-book.md
+book/00-note-on-examples.md
+book/01-why-rust-exists.md
+book/02-hello-world-without-the-lies.md
+book/03-ownership-the-missing-concept.md
