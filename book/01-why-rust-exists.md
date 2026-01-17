@@ -80,3 +80,79 @@ That's not a value judgment. It's a trade-off. The question is whether that trad
 
 ---
 
+
+## Rust's Model
+
+Rust makes safety the default, not the exception. The compiler enforces what C++ leaves to discipline.
+
+**Ownership is explicit and checked.**  
+Every value has exactly one owner. When the owner goes out of scope, the value is dropped. The compiler tracks this and prevents use-after-free at compile time.
+
+```rust
+fn process_data() {
+    let data = vec![1, 2, 3];
+    consume(data);
+    // println!("{:?}", data);  // Compile error: value moved
+}
+
+fn consume(v: Vec<i32>) {
+    // v is dropped here
+}
+```
+
+The compiler knows `data` was moved into `consume`. Trying to use it afterward is a compile error, not undefined behavior.
+
+**Borrowing is tracked.**  
+References have lifetimes. The compiler ensures a reference never outlives the data it points to.
+
+```rust
+fn get_first(v: &Vec<i32>) -> &i32 {
+    &v[0]  // Lifetime tied to v
+}
+
+// This won't compile:
+// fn dangling() -> &i32 {
+//     let v = vec![1, 2, 3];
+//     &v[0]  // Error: v doesn't live long enough
+// }
+```
+
+The compiler rejects code that would create dangling references. Not at runtime—at compile time.
+
+**Mutability and aliasing are exclusive.**  
+You can have multiple immutable references, or one mutable reference, but not both. This prevents iterator invalidation and data races.
+
+```rust
+let mut vec = vec![1, 2, 3];
+let first = &vec[0];
+// vec.push(4);  // Compile error: can't mutate while borrowed
+println!("{}", first);
+```
+
+The compiler enforces this. You can't accidentally invalidate a reference by modifying the container.
+
+**The trade-off is upfront complexity.**  
+You must satisfy the compiler before your code runs. This is slower when prototyping, but eliminates entire classes of bugs. The cost is paid once, at compile time, not repeatedly in production.
+
+---
+
+## Takeaways for C++ Developers
+
+**Mental model shift:**
+- Ownership is not a convention—it's enforced by the compiler
+- References have lifetimes that the compiler tracks
+- Mutability and aliasing cannot coexist
+
+**Rules of thumb:**
+- If you're passing ownership, use move semantics (default in Rust)
+- If you're borrowing, use references (`&T` or `&mut T`)
+- If the compiler rejects your code, it's preventing a bug you'd find later in C++
+
+**Pitfalls:**
+- Fighting the compiler means you're trying to do something unsafe
+- The borrow checker isn't wrong—it's enforcing invariants you'd maintain manually in C++
+- Cloning to satisfy the compiler isn't always wrong—sometimes it's the correct solution
+
+Rust doesn't make you a better programmer. It makes the compiler enforce what you already know you should do.
+
+---

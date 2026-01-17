@@ -115,3 +115,145 @@ This is more verbose. You check errors at every step. But it's also more explici
 
 ---
 
+
+## Rust's Model
+
+Rust uses `Result<T, E>` for recoverable errors and `panic!` for unrecoverable errors. Errors are values, and you handle them explicitly.
+
+**Result is an enum.**  
+Functions that can fail return `Result<T, E>`:
+
+```rust
+use std::fs::File;
+use std::io::{self, Read};
+
+fn read_config(path: &str) -> Result<String, io::Error> {
+    let mut file = File::open(path)?;  // ? propagates error
+    let mut contents = String::new();
+    file.read_to_string(&mut contents)?;
+    Ok(contents)
+}
+```
+
+`Result` is either `Ok(value)` or `Err(error)`. You must handle it—the compiler won't let you ignore it.
+
+**The ? operator propagates errors.**  
+Instead of manually checking and returning, use `?`:
+
+```rust
+fn process_file(path: &str) -> Result<(), io::Error> {
+    let contents = read_config(path)?;  // Returns early if error
+    println!("Config: {}", contents);
+    Ok(())
+}
+```
+
+This is equivalent to:
+```rust
+let contents = match read_config(path) {
+    Ok(c) => c,
+    Err(e) => return Err(e),
+};
+```
+
+**Pattern matching for error handling.**  
+You can handle different errors differently:
+
+```rust
+use std::fs::File;
+use std::io::ErrorKind;
+
+fn open_or_create(path: &str) -> Result<File, io::Error> {
+    match File::open(path) {
+        Ok(file) => Ok(file),
+        Err(error) => match error.kind() {
+            ErrorKind::NotFound => File::create(path),
+            other_error => Err(io::Error::new(other_error, "Failed to open")),
+        },
+    }
+}
+```
+
+**Custom error types.**  
+You can define your own error types:
+
+```rust
+use std::fmt;
+
+#[derive(Debug)]
+enum ParseError {
+    InvalidFormat,
+    MissingField(String),
+    OutOfRange(i32),
+}
+
+impl fmt::Display for ParseError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            ParseError::InvalidFormat => write!(f, "Invalid format"),
+            ParseError::MissingField(field) => write!(f, "Missing field: {}", field),
+            ParseError::OutOfRange(val) => write!(f, "Value out of range: {}", val),
+        }
+    }
+}
+
+impl std::error::Error for ParseError {}
+
+fn parse_data(input: &str) -> Result<i32, ParseError> {
+    if input.is_empty() {
+        return Err(ParseError::InvalidFormat);
+    }
+    input.parse().map_err(|_| ParseError::InvalidFormat)
+}
+```
+
+**Panic for unrecoverable errors.**  
+Use `panic!` for bugs, not for expected errors:
+
+```rust
+fn get_item(vec: &Vec<i32>, index: usize) -> i32 {
+    if index >= vec.len() {
+        panic!("Index out of bounds: {}", index);
+    }
+    vec[index]
+}
+```
+
+Panics unwind the stack (by default) and run destructors, but they're not meant to be caught like exceptions.
+
+**Combinators for error handling.**  
+`Result` has methods for common patterns:
+
+```rust
+fn parse_number(s: &str) -> Result<i32, std::num::ParseIntError> {
+    s.parse::<i32>()
+        .map(|n| n * 2)  // Transform success value
+        .or_else(|_| Ok(0))  // Provide default on error
+}
+```
+
+---
+
+## Takeaways for C++ Developers
+
+**Mental model shift:**
+- Errors are values (`Result<T, E>`), not control flow (exceptions)
+- You must handle errors explicitly—the compiler enforces it
+- `?` propagates errors up the call stack (like `throw`, but explicit)
+- `panic!` is for bugs, not expected errors
+
+**Rules of thumb:**
+- Return `Result<T, E>` for functions that can fail
+- Use `?` to propagate errors up the call stack
+- Use pattern matching to handle different error cases
+- Use `panic!` for invariant violations, not for expected failures
+
+**Pitfalls:**
+- Don't use `unwrap()` in production—it panics on error
+- `expect("message")` is better than `unwrap()` for debugging
+- Error handling is more verbose than exceptions—this is intentional
+- You can't ignore `Result`—the compiler warns if you don't use it
+
+Rust's error handling is explicit and visible in function signatures. The cost is verbosity; the benefit is that you know exactly what can fail.
+
+---

@@ -68,3 +68,91 @@ The payoff comes later: once the code compiles, whole classes of bugs are gone. 
 
 ---
 
+
+## Rust's Model
+
+Rust forces you to think about ownership from the start. There's no "simple mode" where you can ignore it.
+
+**Ownership decisions are mandatory.**  
+Every function parameter declares whether it takes ownership, borrows immutably, or borrows mutably. You can't defer this decision.
+
+```rust
+fn process_owned(data: String) {
+    // Takes ownership, data is dropped at end
+}
+
+fn process_borrowed(data: &String) {
+    // Borrows, doesn't take ownership
+}
+
+fn process_mut(data: &mut String) {
+    // Mutable borrow, can modify but doesn't own
+    data.push_str(" modified");
+}
+```
+
+In C++, you'd use `std::string`, `const std::string&`, or `std::string&`. The difference is that Rust enforces the semantics—you can't use `data` after passing it to `process_owned`.
+
+**The compiler is strict, not helpful (at first).**  
+It rejects code that would work in C++, even if you know it's safe.
+
+```rust
+fn read_file(path: &str) -> std::io::Result<String> {
+    let mut file = std::fs::File::open(path)?;
+    let mut contents = String::new();
+    
+    // This won't compile:
+    // let line = &contents;
+    // file.read_to_string(&mut contents)?;
+    // println!("{}", line);  // Error: contents borrowed mutably
+    
+    std::io::Read::read_to_string(&mut file, &mut contents)?;
+    Ok(contents)
+}
+```
+
+The compiler prevents you from holding an immutable reference while mutating. In C++, this would compile and might work—or might crash if the string reallocates.
+
+**Errors are explicit.**  
+Functions that can fail return `Result<T, E>`. You must handle the error or explicitly propagate it with `?`.
+
+```rust
+use std::fs::File;
+use std::io::Read;
+
+fn load_config(path: &str) -> Result<String, std::io::Error> {
+    let mut file = File::open(path)?;  // ? propagates error
+    let mut contents = String::new();
+    file.read_to_string(&mut contents)?;
+    Ok(contents)
+}
+```
+
+You can't ignore the `Result`. The compiler forces you to handle it or propagate it. No silent failures.
+
+**The learning curve is front-loaded.**  
+You fight the compiler for the first week. But once you understand what it's checking, the fights become rare. The code that compiles tends to work.
+
+---
+
+## Takeaways for C++ Developers
+
+**Mental model shift:**
+- You can't prototype by ignoring ownership—the compiler won't let you
+- Errors are values, not exceptions—you handle them explicitly
+- The compiler is checking invariants you'd maintain manually in C++
+
+**Rules of thumb:**
+- Start with borrowing (`&T`) unless you need ownership
+- Use `&mut T` only when you need to modify
+- Use `?` to propagate errors up the call stack
+- If the compiler says no, restructure your code—don't fight it
+
+**Pitfalls:**
+- Don't try to write C++ in Rust—the patterns don't translate directly
+- The first week will be frustrating—this is normal
+- Cloning to make the compiler happy is sometimes the right answer
+
+The payoff comes later: once your code compiles, it usually works. The bugs you'd spend days debugging in C++ are caught at compile time.
+
+---

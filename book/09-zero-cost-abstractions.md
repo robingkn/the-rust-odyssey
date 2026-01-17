@@ -107,3 +107,155 @@ The costs in Rust are more visible. When you pay for something, you know it. Whe
 
 ---
 
+
+## Rust's Model
+
+Rust makes the same zero-cost promise as C++, but with different trade-offs. The costs are more visible, and the compiler provides stronger guarantees.
+
+**Monomorphization for generics.**  
+Generic functions are specialized for each type, just like C++ templates:
+
+```rust
+fn max<T: PartialOrd>(a: T, b: T) -> T {
+    if a > b { a } else { b }
+}
+
+// Generates specialized code for each type:
+let x = max(1, 2);        // max::<i32>
+let y = max(1.0, 2.0);    // max::<f64>
+```
+
+No runtime dispatch. The abstraction disappears at compile time.
+
+**Trait objects for dynamic dispatch.**  
+When you need polymorphism, use trait objects. The cost is explicit in the type:
+
+```rust
+trait Draw {
+    fn draw(&self);
+}
+
+struct Circle { radius: f64 }
+struct Square { side: f64 }
+
+impl Draw for Circle {
+    fn draw(&self) { println!("Drawing circle"); }
+}
+
+impl Draw for Square {
+    fn draw(&self) { println!("Drawing square"); }
+}
+
+// Static dispatch (monomorphization):
+fn draw_static<T: Draw>(shape: &T) {
+    shape.draw();  // No vtable lookup
+}
+
+// Dynamic dispatch (trait object):
+fn draw_dynamic(shape: &dyn Draw) {
+    shape.draw();  // Vtable lookup
+}
+```
+
+Static dispatch is zero-cost. Dynamic dispatch has vtable overhead, but it's explicit in the signature.
+
+**Iterators are zero-cost.**  
+Rust iterators compile to the same code as hand-written loops:
+
+```rust
+let numbers = vec![1, 2, 3, 4, 5];
+
+// High-level iterator chain:
+let sum: i32 = numbers.iter()
+    .filter(|&&x| x % 2 == 0)
+    .map(|&x| x * 2)
+    .sum();
+
+// Compiles to the same code as:
+let mut sum = 0;
+for &x in &numbers {
+    if x % 2 == 0 {
+        sum += x * 2;
+    }
+}
+```
+
+The abstraction is free. The compiler optimizes iterator chains into tight loops.
+
+**No hidden allocations.**  
+Rust doesn't allocate unless you explicitly use heap types:
+
+```rust
+// Stack-allocated:
+let array = [1, 2, 3, 4, 5];
+
+// Heap-allocated (explicit):
+let vec = vec![1, 2, 3, 4, 5];
+
+// No hidden copies:
+fn process(data: Vec<i32>) {
+    // Takes ownership, no copy
+}
+```
+
+Unlike C++ `std::vector`, Rust's `Vec` doesn't copy on assignment—it moves. Copies are explicit with `.clone()`.
+
+**Inline and const evaluation.**  
+Small functions are inlined, and const functions are evaluated at compile time:
+
+```rust
+#[inline]
+fn square(x: i32) -> i32 {
+    x * x
+}
+
+const fn factorial(n: u32) -> u32 {
+    match n {
+        0 => 1,
+        _ => n * factorial(n - 1),
+    }
+}
+
+const FACT_5: u32 = factorial(5);  // Computed at compile time
+```
+
+**No exceptions overhead.**  
+Rust doesn't have exceptions. No unwinding tables, no hidden code size cost. Error handling with `Result` is explicit and zero-cost (when inlined).
+
+**Reference counting is explicit.**  
+Shared ownership requires `Rc` or `Arc`. The cost is visible in the type:
+
+```rust
+use std::rc::Rc;
+
+let data = Rc::new(vec![1, 2, 3]);
+let data2 = Rc::clone(&data);  // Explicit reference count increment
+```
+
+Unlike C++ `shared_ptr`, you can't accidentally create shared ownership. You have to explicitly use `Rc` or `Arc`.
+
+---
+
+## Takeaways for C++ Developers
+
+**Mental model shift:**
+- Generics are monomorphized—zero-cost, but increases binary size
+- Trait objects are explicit dynamic dispatch—cost is visible in the type
+- Iterators are zero-cost abstractions—compile to tight loops
+- No hidden allocations or copies—everything is explicit
+
+**Rules of thumb:**
+- Use generics (`T: Trait`) for static dispatch (zero-cost)
+- Use trait objects (`&dyn Trait`) for dynamic dispatch (vtable cost)
+- Iterators are as fast as hand-written loops—use them
+- `Rc`/`Arc` are explicit reference counting—use only when needed
+
+**Pitfalls:**
+- Monomorphization increases binary size—each instantiation generates code
+- Trait objects can't be sized—use `Box<dyn Trait>` or `&dyn Trait`
+- `Rc` is not thread-safe—use `Arc` for concurrent access
+- Cloning is explicit—no hidden copies like C++ copy constructors
+
+Rust's zero-cost abstractions are more explicit than C++. When you pay for something, you know it. When you don't, the compiler guarantees it.
+
+---

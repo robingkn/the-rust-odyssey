@@ -139,3 +139,200 @@ The trade-off is that you have to structure your code to satisfy the compiler. B
 
 ---
 
+
+## Rust's Model
+
+Rust prevents data races at compile time through the type system. Two traits—`Send` and `Sync`—encode thread safety, and the borrow checker enforces it.
+
+**Send and Sync traits.**  
+- `Send`: A type can be transferred between threads
+- `Sync`: A type can be shared between threads (via `&T`)
+
+Most types are `Send` and `Sync` automatically. The compiler derives them based on the fields.
+
+```rust
+struct Config {
+    host: String,    // Send + Sync
+    port: u16,       // Send + Sync
+}
+// Config is automatically Send + Sync
+```
+
+Types that aren't thread-safe don't implement these traits:
+
+```rust
+use std::rc::Rc;
+
+let data = Rc::new(vec![1, 2, 3]);
+// std::thread::spawn(move || {
+//     println!("{:?}", data);  // Compile error: Rc is not Send
+// });
+```
+
+**Arc for shared ownership across threads.**  
+Use `Arc` (atomic reference counting) for shared ownership:
+
+```rust
+use std::sync::Arc;
+use std::thread;
+
+let data = Arc::new(vec![1, 2, 3, 4, 5]);
+
+let handles: Vec<_> = (0..3).map(|i| {
+    let data = Arc::clone(&data);
+    thread::spawn(move || {
+        println!("Thread {}: {:?}", i, data);
+    })
+}).collect();
+
+for handle in handles {
+    handle.join().unwrap();
+}
+```
+
+`Arc` is `Send` and `Sync`. The compiler ensures you can't share non-thread-safe types.
+
+**Mutex for shared mutable state.**  
+Use `Mutex` to protect shared mutable data:
+
+```rust
+use std::sync::{Arc, Mutex};
+use std::thread;
+
+let counter = Arc::new(Mutex::new(0));
+
+let handles: Vec<_> = (0..10).map(|_| {
+    let counter = Arc::clone(&counter);
+    thread::spawn(move || {
+        let mut num = counter.lock().unwrap();
+        *num += 1;
+    })
+}).collect();
+
+for handle in handles {
+    handle.join().unwrap();
+}
+
+println!("Result: {}", *counter.lock().unwrap());
+```
+
+The `Mutex` ensures exclusive access. You can't access the data without locking—the type system enforces it.
+
+**The borrow checker prevents data races.**  
+You can't have mutable access to shared data without synchronization:
+
+```rust
+let mut data = vec![1, 2, 3];
+
+// This won't compile:
+// thread::spawn(|| {
+//     data.push(4);  // Error: can't capture mutable reference
+// });
+```
+
+The compiler prevents you from sharing mutable references across threads.
+
+**RwLock for read-heavy workloads.**  
+Use `RwLock` when you have many readers and few writers:
+
+```rust
+use std::sync::{Arc, RwLock};
+use std::thread;
+
+let data = Arc::new(RwLock::new(vec![1, 2, 3]));
+
+// Multiple readers:
+let handles: Vec<_> = (0..5).map(|i| {
+    let data = Arc::clone(&data);
+    thread::spawn(move || {
+        let read = data.read().unwrap();
+        println!("Reader {}: {:?}", i, *read);
+    })
+}).collect();
+
+// One writer:
+let data_clone = Arc::clone(&data);
+let writer = thread::spawn(move || {
+    let mut write = data_clone.write().unwrap();
+    write.push(4);
+});
+
+for handle in handles {
+    handle.join().unwrap();
+}
+writer.join().unwrap();
+```
+
+**Channels for message passing.**  
+Use channels to communicate between threads:
+
+```rust
+use std::sync::mpsc;
+use std::thread;
+
+let (tx, rx) = mpsc::channel();
+
+thread::spawn(move || {
+    let messages = vec!["hello", "from", "thread"];
+    for msg in messages {
+        tx.send(msg).unwrap();
+    }
+});
+
+for received in rx {
+    println!("Got: {}", received);
+}
+```
+
+The type system ensures you can't send non-`Send` types through channels.
+
+**Atomic types for lock-free operations.**  
+Use atomics for simple lock-free operations:
+
+```rust
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::Arc;
+use std::thread;
+
+let counter = Arc::new(AtomicUsize::new(0));
+
+let handles: Vec<_> = (0..10).map(|_| {
+    let counter = Arc::clone(&counter);
+    thread::spawn(move || {
+        counter.fetch_add(1, Ordering::SeqCst);
+    })
+}).collect();
+
+for handle in handles {
+    handle.join().unwrap();
+}
+
+println!("Result: {}", counter.load(Ordering::SeqCst));
+```
+
+---
+
+## Takeaways for C++ Developers
+
+**Mental model shift:**
+- Thread safety is encoded in the type system (`Send`, `Sync`)
+- The compiler prevents data races—you can't forget to lock
+- Shared ownership requires `Arc` (explicit atomic reference counting)
+- Mutable shared state requires `Mutex` or `RwLock`
+
+**Rules of thumb:**
+- Use `Arc` for shared ownership across threads
+- Use `Mutex` for shared mutable state
+- Use `RwLock` for read-heavy workloads
+- Use channels for message passing between threads
+- Use atomics for simple lock-free operations
+
+**Pitfalls:**
+- `Rc` is not thread-safe—use `Arc` instead
+- `RefCell` is not thread-safe—use `Mutex` instead
+- Holding a `Mutex` guard across `.await` can cause deadlocks
+- The compiler prevents data races, not deadlocks or race conditions
+
+Rust eliminates data races at compile time. The cost is that you must structure your code to satisfy the type system.
+
+---

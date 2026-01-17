@@ -106,3 +106,119 @@ This requires annotations (`'a`, `'b`) that feel like noise at first. But they'r
 
 ---
 
+
+## Rust's Model
+
+Rust makes lifetimes explicit when the compiler can't infer them. Every reference has a lifetime, and the compiler ensures references don't outlive the data they point to.
+
+**Lifetimes are usually inferred.**  
+Most of the time, you don't write lifetime annotations. The compiler figures them out.
+
+```rust
+fn first_element(vec: &Vec<i32>) -> &i32 {
+    &vec[0]  // Lifetime inferred: return borrows from vec
+}
+```
+
+The compiler knows the returned reference borrows from `vec`, so it can't outlive `vec`.
+
+**Explicit lifetimes when needed.**  
+When the compiler can't infer, you annotate with `'a`, `'b`, etc. These aren't types—they're names for lifetimes.
+
+```rust
+fn longest<'a>(s1: &'a str, s2: &'a str) -> &'a str {
+    if s1.len() > s2.len() { s1 } else { s2 }
+}
+```
+
+This says: "The returned reference has the same lifetime as the shorter of `s1` and `s2`." The compiler enforces this:
+
+```rust
+fn main() {
+    let s1 = String::from("long string");
+    let result;
+    {
+        let s2 = String::from("short");
+        result = longest(&s1, &s2);
+    }  // s2 dropped here
+    // println!("{}", result);  // Compile error: s2 doesn't live long enough
+}
+```
+
+**Structs with references need lifetimes.**  
+If a struct holds a reference, you must annotate the lifetime.
+
+```rust
+struct Parser<'a> {
+    input: &'a str,
+    position: usize,
+}
+
+impl<'a> Parser<'a> {
+    fn new(input: &'a str) -> Self {
+        Parser { input, position: 0 }
+    }
+    
+    fn current(&self) -> Option<char> {
+        self.input.chars().nth(self.position)
+    }
+}
+```
+
+The `'a` says: "This `Parser` borrows from `input`, and can't outlive it."
+
+```rust
+fn main() {
+    let input = String::from("hello");
+    let parser = Parser::new(&input);
+    // input can't be dropped while parser exists
+}
+```
+
+**Lifetime elision rules.**  
+Rust has rules to infer lifetimes in common cases:
+
+1. Each input reference gets its own lifetime
+2. If there's one input lifetime, it's assigned to all output references
+3. If there's a `&self` or `&mut self`, its lifetime is assigned to all output references
+
+```rust
+// These are equivalent:
+fn first(vec: &Vec<i32>) -> &i32 { &vec[0] }
+fn first<'a>(vec: &'a Vec<i32>) -> &'a i32 { &vec[0] }
+```
+
+**Static lifetime for constants.**  
+`'static` means "lives for the entire program." String literals have this lifetime.
+
+```rust
+fn get_message() -> &'static str {
+    "This string lives forever"
+}
+```
+
+---
+
+## Takeaways for C++ Developers
+
+**Mental model shift:**
+- Lifetimes are not types—they're constraints on how long references are valid
+- The compiler tracks lifetimes and prevents dangling references
+- Annotations (`'a`) are names for lifetimes, not durations
+- Most lifetimes are inferred—you only annotate when the compiler can't figure it out
+
+**Rules of thumb:**
+- Start without lifetime annotations—add them only when the compiler asks
+- `'a` in a function signature means "all these references are related"
+- Structs with references need lifetime annotations
+- If you're fighting lifetimes, consider taking ownership instead of borrowing
+
+**Pitfalls:**
+- Lifetime annotations don't change behavior—they document constraints
+- `'static` doesn't mean "heap-allocated"—it means "lives forever"
+- You can't return a reference to a local variable—the compiler prevents it
+- Complex lifetime errors often mean your design needs restructuring
+
+Rust's lifetime system is what you do mentally in C++ when tracking pointer validity, but enforced by the compiler.
+
+---

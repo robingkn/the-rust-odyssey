@@ -119,3 +119,168 @@ This is more verbose. You have to declare traits, implement them for your types,
 
 ---
 
+
+## Rust's Model
+
+Rust uses traits—explicit interfaces for generic code. A trait declares what operations a type must support, and generic functions declare which traits they require.
+
+**Traits are explicit interfaces.**  
+A trait defines a set of methods:
+
+```rust
+trait Serialize {
+    fn to_bytes(&self) -> Vec<u8>;
+    fn from_bytes(data: &[u8]) -> Result<Self, String> where Self: Sized;
+}
+```
+
+Types implement traits explicitly:
+
+```rust
+struct Config {
+    host: String,
+    port: u16,
+}
+
+impl Serialize for Config {
+    fn to_bytes(&self) -> Vec<u8> {
+        format!("{}:{}", self.host, self.port).into_bytes()
+    }
+    
+    fn from_bytes(data: &[u8]) -> Result<Self, String> {
+        let s = String::from_utf8(data.to_vec())
+            .map_err(|e| e.to_string())?;
+        let parts: Vec<&str> = s.split(':').collect();
+        if parts.len() != 2 {
+            return Err("Invalid format".to_string());
+        }
+        Ok(Config {
+            host: parts[0].to_string(),
+            port: parts[1].parse().map_err(|e| format!("{}", e))?,
+        })
+    }
+}
+```
+
+**Generic functions use trait bounds.**  
+You declare what traits a generic type must implement:
+
+```rust
+fn save_to_file<T: Serialize>(item: &T, path: &str) -> std::io::Result<()> {
+    let bytes = item.to_bytes();
+    std::fs::write(path, bytes)
+}
+```
+
+This says: "`T` must implement `Serialize`." The compiler checks this at the definition, not at the call site.
+
+**Multiple trait bounds.**  
+You can require multiple traits:
+
+```rust
+use std::fmt::Debug;
+
+fn log_and_save<T: Serialize + Debug>(item: &T, path: &str) -> std::io::Result<()> {
+    println!("Saving: {:?}", item);
+    save_to_file(item, path)
+}
+```
+
+Or use `where` clauses for readability:
+
+```rust
+fn process<T>(item: T) -> Result<(), String>
+where
+    T: Serialize + Debug + Clone,
+{
+    // Implementation
+    Ok(())
+}
+```
+
+**Trait objects for dynamic dispatch.**  
+When you need runtime polymorphism, use trait objects:
+
+```rust
+fn process_items(items: &[Box<dyn Serialize>]) {
+    for item in items {
+        let bytes = item.to_bytes();
+        // Process bytes
+    }
+}
+```
+
+`dyn Serialize` is a trait object—like a C++ virtual function, but explicit. The cost (vtable lookup) is visible in the type.
+
+**Associated types for cleaner signatures.**  
+Traits can have associated types:
+
+```rust
+trait Parser {
+    type Output;
+    type Error;
+    
+    fn parse(&self, input: &str) -> Result<Self::Output, Self::Error>;
+}
+
+struct JsonParser;
+
+impl Parser for JsonParser {
+    type Output = serde_json::Value;
+    type Error = serde_json::Error;
+    
+    fn parse(&self, input: &str) -> Result<Self::Output, Self::Error> {
+        serde_json::from_str(input)
+    }
+}
+```
+
+**Default implementations.**  
+Traits can provide default method implementations:
+
+```rust
+trait Logger {
+    fn log(&self, message: &str) {
+        println!("[LOG] {}", message);
+    }
+    
+    fn error(&self, message: &str) {
+        println!("[ERROR] {}", message);
+    }
+}
+
+struct FileLogger;
+
+impl Logger for FileLogger {
+    // Use default log(), override error()
+    fn error(&self, message: &str) {
+        eprintln!("[FILE ERROR] {}", message);
+    }
+}
+```
+
+---
+
+## Takeaways for C++ Developers
+
+**Mental model shift:**
+- Traits are explicit interfaces—you declare what you need
+- Generic functions are checked at definition, not instantiation
+- Trait bounds replace SFINAE and concepts
+- Trait objects (`dyn Trait`) are explicit dynamic dispatch
+
+**Rules of thumb:**
+- Define traits for interfaces, not just for generic code
+- Use trait bounds (`T: Trait`) for static dispatch (monomorphization)
+- Use trait objects (`&dyn Trait`) for dynamic dispatch (vtable)
+- Prefer static dispatch unless you need runtime polymorphism
+
+**Pitfalls:**
+- You can't implement external traits for external types (orphan rule)
+- Trait objects have size restrictions—use `Box<dyn Trait>` for ownership
+- Generic functions are monomorphized—each instantiation generates code
+- Error messages point to trait bounds, not deep in the implementation
+
+Rust's traits are what C++ concepts try to be, but with explicit implementation and better error messages.
+
+---

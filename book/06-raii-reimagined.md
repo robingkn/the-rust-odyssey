@@ -111,3 +111,128 @@ This makes RAII more restrictive—but also more predictable. You don't have to 
 
 ---
 
+
+## Rust's Model
+
+Rust ties RAII to ownership. Every value has exactly one owner, and when the owner goes out of scope, the destructor (`Drop`) runs. You can't bypass this.
+
+**Drop is automatic and guaranteed.**  
+When a value goes out of scope, its `Drop` implementation runs. This is deterministic and predictable.
+
+```rust
+use std::fs::File;
+use std::io::Write;
+
+fn write_log(message: &str) -> std::io::Result<()> {
+    let mut file = File::create("log.txt")?;
+    file.write_all(message.as_bytes())?;
+    Ok(())
+}  // file.drop() called here automatically
+```
+
+No need for explicit cleanup. The file is closed when `file` goes out of scope.
+
+**You can't bypass RAII.**  
+There's no equivalent to raw `new` and `delete`. Every resource is managed by a type that implements `Drop`.
+
+```rust
+fn process_data() {
+    let data = vec![1, 2, 3];  // Heap allocation
+    // Use data
+}  // data.drop() called, memory freed
+```
+
+You can't forget to free memory. The compiler ensures `Drop` runs.
+
+**Move semantics prevent double-free.**  
+When you move a value, the original owner can't drop it.
+
+```rust
+fn consume(data: Vec<i32>) {
+    // data is dropped here
+}
+
+fn main() {
+    let vec = vec![1, 2, 3];
+    consume(vec);  // vec moved
+    // vec.drop() NOT called here—ownership transferred
+}
+```
+
+In C++, you can use a moved-from object and get undefined behavior. In Rust, the compiler prevents it.
+
+**Custom RAII types with Drop.**  
+You implement `Drop` for custom cleanup logic.
+
+```rust
+use std::sync::Mutex;
+
+struct Guard<'a> {
+    lock: &'a Mutex<i32>,
+}
+
+impl<'a> Drop for Guard<'a> {
+    fn drop(&mut self) {
+        println!("Releasing lock");
+        // Lock released automatically when Guard is dropped
+    }
+}
+
+fn critical_section(lock: &Mutex<i32>) {
+    let guard = lock.lock().unwrap();
+    // Critical section
+}  // guard.drop() called, lock released
+```
+
+The lock is released when `guard` goes out of scope. You can't forget.
+
+**No copy for RAII types.**  
+Types that manage resources don't implement `Copy`. You must explicitly clone or move.
+
+```rust
+let file = File::open("data.txt")?;
+// let file2 = file;  // Move, not copy
+// file is now invalid
+
+// To share, use Rc or Arc:
+use std::rc::Rc;
+let data = Rc::new(vec![1, 2, 3]);
+let data2 = Rc::clone(&data);  // Explicit reference count increment
+```
+
+**Drop order is deterministic.**  
+Values are dropped in reverse order of creation, just like C++ destructors.
+
+```rust
+fn main() {
+    let _a = String::from("first");
+    let _b = String::from("second");
+    let _c = String::from("third");
+}  // Dropped in order: c, b, a
+```
+
+---
+
+## Takeaways for C++ Developers
+
+**Mental model shift:**
+- RAII is mandatory, not opt-in—every value has a destructor
+- Move is the default—you can't use a value after moving it
+- No manual `delete` or `free`—the compiler ensures cleanup
+- `Drop` is like a C++ destructor, but tied to ownership
+
+**Rules of thumb:**
+- Resources are managed by types that implement `Drop`
+- Moving transfers ownership—the original owner can't drop
+- Use `Rc`/`Arc` for shared ownership (explicit reference counting)
+- Implement `Drop` for custom cleanup logic
+
+**Pitfalls:**
+- You can't implement both `Drop` and `Copy`—they're mutually exclusive
+- `Drop` can't fail—no exceptions, so handle errors before dropping
+- Circular references with `Rc` cause memory leaks—use `Weak` to break cycles
+- The compiler prevents use-after-move, unlike C++ `std::move`
+
+Rust's RAII is what C++ smart pointers try to be, but enforced by the compiler and tied to ownership.
+
+---

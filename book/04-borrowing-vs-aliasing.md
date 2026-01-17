@@ -108,3 +108,124 @@ This feels limiting—because it is. But it eliminates iterator invalidation, un
 
 ---
 
+
+## Rust's Model
+
+Rust enforces a simple rule: you can have multiple immutable references, or one mutable reference, but not both at the same time.
+
+**Aliasing XOR mutability.**  
+This is the core of Rust's safety guarantee. You can alias (multiple references), or you can mutate, but not both.
+
+```rust
+let mut vec = vec![1, 2, 3];
+
+// Multiple immutable borrows: OK
+let r1 = &vec;
+let r2 = &vec;
+println!("{:?} {:?}", r1, r2);
+
+// One mutable borrow: OK (after immutable borrows end)
+let r3 = &mut vec;
+r3.push(4);
+
+// But not both:
+// let r4 = &vec;
+// let r5 = &mut vec;  // Compile error: can't borrow mutably while borrowed immutably
+```
+
+This prevents iterator invalidation at compile time:
+
+```rust
+let mut vec = vec![1, 2, 3];
+let first = &vec[0];
+// vec.push(4);  // Compile error: can't mutate while borrowed
+println!("{}", first);
+```
+
+In C++, this would compile and might crash. In Rust, it's a compile error.
+
+**Borrows have lifetimes.**  
+The compiler tracks how long a borrow is valid. A borrow cannot outlive the data it references.
+
+```rust
+fn process_data() {
+    let vec = vec![1, 2, 3];
+    let first = &vec[0];
+    println!("{}", first);
+}  // vec and first both dropped here
+
+// This won't compile:
+// fn get_first() -> &i32 {
+//     let vec = vec![1, 2, 3];
+//     &vec[0]  // Error: vec doesn't live long enough
+// }
+```
+
+**Interior mutability is explicit.**  
+If you need to mutate through a shared reference, you use `Cell<T>` or `RefCell<T>`. The cost is visible in the type.
+
+```rust
+use std::cell::RefCell;
+
+struct Cache {
+    data: RefCell<Vec<String>>,
+}
+
+impl Cache {
+    fn add(&self, item: String) {
+        // Mutate through shared reference
+        self.data.borrow_mut().push(item);
+    }
+    
+    fn get(&self, index: usize) -> Option<String> {
+        self.data.borrow().get(index).cloned()
+    }
+}
+```
+
+`RefCell` checks borrowing rules at runtime. If you violate them (e.g., borrow mutably while already borrowed), the program panics. This is explicit—you know where the runtime checks are.
+
+**Slices prevent invalidation.**  
+Instead of holding a reference into a container, you use slices that borrow the data.
+
+```rust
+fn process_slice(data: &[i32]) {
+    for item in data {
+        println!("{}", item);
+    }
+}
+
+fn main() {
+    let vec = vec![1, 2, 3, 4, 5];
+    process_slice(&vec[1..4]);  // Borrow a slice
+    // vec is still valid here
+}
+```
+
+The slice borrows from `vec`, so you can't modify `vec` while the slice exists. The compiler enforces this.
+
+---
+
+## Takeaways for C++ Developers
+
+**Mental model shift:**
+- Aliasing and mutability are mutually exclusive—enforced by the compiler
+- References have lifetimes—the compiler tracks them
+- Interior mutability requires explicit types (`Cell`, `RefCell`)
+- Iterator invalidation is impossible (outside `unsafe`)
+
+**Rules of thumb:**
+- Use `&T` for shared, read-only access
+- Use `&mut T` for exclusive, mutable access
+- You can't hold a reference while modifying the container
+- If you need shared mutability, use `RefCell` (single-threaded) or `Mutex` (multi-threaded)
+
+**Pitfalls:**
+- You can't store a reference and modify the source—restructure your code
+- `RefCell` checks at runtime—panics if you violate borrowing rules
+- Cloning to avoid borrow checker fights is sometimes correct
+- The compiler's "cannot borrow as mutable" errors mean you're trying to alias and mutate
+
+Rust's borrowing rules eliminate data races and iterator invalidation. The cost is that you must structure your code to satisfy the compiler.
+
+---

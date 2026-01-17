@@ -42,3 +42,23 @@ Be fair to C++.
 The goal is understanding — not criticism.
 
 ---
+
+## Rust’s Model
+
+Explain how Rust approaches the same problem:
+
+- What the Rust language enforces that differs from C++
+- How Rust prevents subtle bugs or enforces constraints
+- Trade-offs Rust makes versus C++
+
+Include realistic, idiomatic Rust code examples:
+
+---
+
+## Takeaways for C++ Developers
+
+- Concise summary of the differences and mental model adjustments
+- Checklist or rules-of-thumb to guide Rust coding patterns
+- Optional warnings about subtle pitfalls when translating C++ intuition
+
+---

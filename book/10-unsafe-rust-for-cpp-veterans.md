@@ -98,3 +98,173 @@ This is more restrictive than C++. But it's also more honest: when you see `unsa
 
 ---
 
+
+## Rust's Model
+
+Rust makes the boundary between safe and unsafe code explicit. Everything is safe by default. Unsafe operations require an `unsafe` block.
+
+**Unsafe is a keyword.**  
+Five operations require `unsafe`:
+
+1. Dereferencing raw pointers
+2. Calling unsafe functions
+3. Accessing or modifying mutable static variables
+4. Implementing unsafe traits
+5. Accessing fields of unions
+
+```rust
+fn read_raw_pointer(ptr: *const i32) -> i32 {
+    unsafe {
+        *ptr  // Dereference requires unsafe
+    }
+}
+```
+
+The `unsafe` block says: "I'm taking responsibility for upholding Rust's safety guarantees here."
+
+**Raw pointers for C interop.**  
+When interfacing with C, you use raw pointers:
+
+```rust
+use std::ffi::CString;
+use std::os::raw::c_char;
+
+extern "C" {
+    fn strlen(s: *const c_char) -> usize;
+}
+
+fn get_length(s: &str) -> usize {
+    let c_str = CString::new(s).unwrap();
+    unsafe {
+        strlen(c_str.as_ptr())
+    }
+}
+```
+
+The `unsafe` block isolates the C interop. The rest of your code is safe.
+
+**Unsafe functions.**  
+Functions that have safety requirements are marked `unsafe`:
+
+```rust
+unsafe fn write_to_address(addr: usize, value: i32) {
+    let ptr = addr as *mut i32;
+    *ptr = value;
+}
+
+fn main() {
+    let mut x = 42;
+    let addr = &mut x as *mut i32 as usize;
+    
+    unsafe {
+        write_to_address(addr, 100);
+    }
+    
+    println!("{}", x);  // 100
+}
+```
+
+Calling an `unsafe` function requires an `unsafe` block. This makes the boundary visible.
+
+**Safe abstractions over unsafe code.**  
+You can build safe APIs on top of unsafe code:
+
+```rust
+pub struct Buffer {
+    data: *mut u8,
+    len: usize,
+    capacity: usize,
+}
+
+impl Buffer {
+    pub fn new(capacity: usize) -> Self {
+        let layout = std::alloc::Layout::array::<u8>(capacity).unwrap();
+        let data = unsafe {
+            std::alloc::alloc(layout)
+        };
+        Buffer { data, len: 0, capacity }
+    }
+    
+    pub fn push(&mut self, byte: u8) {
+        assert!(self.len < self.capacity, "Buffer full");
+        unsafe {
+            *self.data.add(self.len) = byte;
+        }
+        self.len += 1;
+    }
+    
+    pub fn get(&self, index: usize) -> Option<u8> {
+        if index < self.len {
+            Some(unsafe { *self.data.add(index) })
+        } else {
+            None
+        }
+    }
+}
+
+impl Drop for Buffer {
+    fn drop(&mut self) {
+        unsafe {
+            let layout = std::alloc::Layout::array::<u8>(self.capacity).unwrap();
+            std::alloc::dealloc(self.data, layout);
+        }
+    }
+}
+```
+
+The `Buffer` API is safe—users can't violate memory safety. The `unsafe` blocks are isolated and auditable.
+
+**Unsafe traits.**  
+Some traits have safety requirements:
+
+```rust
+unsafe trait Zeroable {
+    // Safe to fill with zeros
+}
+
+unsafe impl Zeroable for u32 {}
+unsafe impl Zeroable for i32 {}
+
+fn zero_out<T: Zeroable>(value: &mut T) {
+    unsafe {
+        std::ptr::write_bytes(value as *mut T, 0, 1);
+    }
+}
+```
+
+Implementing an `unsafe` trait requires `unsafe impl`. This documents that you're upholding the trait's safety contract.
+
+**Auditing for unsafe.**  
+You can search for `unsafe` to find all potentially dangerous code:
+
+```bash
+grep -r "unsafe" src/
+```
+
+This is impossible in C++—unsafe code looks like safe code.
+
+---
+
+## Takeaways for C++ Developers
+
+**Mental model shift:**
+- Safe by default, unsafe by opt-in (opposite of C++)
+- `unsafe` blocks are explicit boundaries—you can audit them
+- Unsafe code must uphold Rust's safety guarantees
+- Safe abstractions can be built on unsafe foundations
+
+**Rules of thumb:**
+- Use `unsafe` only when necessary (C interop, performance, low-level code)
+- Keep `unsafe` blocks small and well-documented
+- Build safe APIs on top of unsafe code
+- Document the safety invariants you're upholding
+
+**Pitfalls:**
+- `unsafe` doesn't disable the borrow checker—it just allows specific operations
+- You're responsible for upholding safety guarantees in `unsafe` blocks
+- Unsafe code can break safe code if invariants are violated
+- Raw pointers don't track lifetimes—you must ensure validity manually
+
+Rust's `unsafe` is what C++ does everywhere, but isolated and auditable. The boundary is explicit, not invisible.
+
+---
