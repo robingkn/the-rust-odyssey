@@ -1,6 +1,6 @@
 # Copyright
 
-Copyright © [Year] [Author Name]
+Copyright © 2026 Robin George Koshy
 
 All rights reserved.
 
