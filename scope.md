@@ -1,0 +1,4 @@
+- Book length: ~250 pages
+- Target: Conceptual mastery, not exhaustive coverage
+- Code: Small, focused, illustrative
+- Platform: Stable Rust
