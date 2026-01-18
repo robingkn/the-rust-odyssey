@@ -44,7 +44,6 @@ jobs:
       - name: Build PDF
         run: |
           pandoc $(cat book/book.txt) \
-            --toc \
             --pdf-engine=xelatex \
             --include-in-header=book/pandoc-header.tex \
             -o dist/${BOOK_NAME}-${{ github.ref_name }}.pdf
@@ -57,6 +56,8 @@ jobs:
 
       - name: Build HTML
         run: |
+          mkdir -p dist/html/book/assets
+          cp -r book/assets/* dist/html/book/assets/
           pandoc $(cat book/book.txt) \
             --standalone \
             --toc \

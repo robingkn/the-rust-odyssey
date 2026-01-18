@@ -1,2 +1,13 @@
 \usepackage{graphicx}
 \usepackage{geometry}
+
+% Remove all margins for cover page
+\newcommand{\coverpage}{%
+  \newgeometry{margin=0in}
+  \thispagestyle{empty}
+}
+
+% Restore normal margins
+\newcommand{\restoremargings}{%
+  \restoregeometry
+}

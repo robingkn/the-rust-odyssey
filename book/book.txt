@@ -1,5 +1,6 @@
 book/00-cover.md
 book/00-title-page.md
+book/00-toc.md
 book/00-copyright.md
 book/00-preface.md
 book/00-how-to-read-this-book.md

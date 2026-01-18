@@ -1,6 +1,9 @@
+---
+title: "The Rust Odyssey"
+author: "Robin George Koshy"
+---
 ```{=latex}
-% Full-bleed cover page (first page)
-\thispagestyle{empty}
+\coverpage
 \begin{center}
 \vspace*{-1in}
 \includegraphics[
@@ -10,4 +13,5 @@
 ]{book/assets/cover.png}
 \end{center}
 \clearpage
+\restoremargings
 ```
