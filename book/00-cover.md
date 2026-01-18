@@ -6,3 +6,5 @@
 \clearpage
 \restoregeometry
 ```
+
+<!-- End of cover page, resume markdown processing -->

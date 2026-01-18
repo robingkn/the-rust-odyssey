@@ -1,7 +1,3 @@
----
-title: "The Rust Odyssey"
-author: "Robin George Koshy"
----
 ```{=latex}
 \thispagestyle{empty}
 \vspace*{4cm}

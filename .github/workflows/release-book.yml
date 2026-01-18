@@ -43,9 +43,11 @@ jobs:
 
       - name: Build PDF
         run: |
-          pandoc $(cat book/book.txt) \
+          pandoc -f markdown $(cat book/book.txt) \
             --pdf-engine=xelatex \
             --include-in-header=book/pandoc-header.tex \
+            --metadata title="The Rust Odyssey" \
+            --metadata author="Robin George Koshy" \
             -o dist/${BOOK_NAME}-${{ github.ref_name }}.pdf
 
       - name: Build EPUB
