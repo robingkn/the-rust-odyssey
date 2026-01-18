@@ -1,3 +1,4 @@
+```{=latex}
 % Full-bleed cover page (first page)
 \thispagestyle{empty}
 \begin{center}
@@ -9,3 +10,4 @@
 ]{book/assets/cover.png}
 \end{center}
 \clearpage
+```

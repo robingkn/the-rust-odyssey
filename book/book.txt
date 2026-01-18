@@ -1,4 +1,4 @@
-book/00-cover.tex
+book/00-cover.md
 book/00-title-page.md
 book/00-copyright.md
 book/00-preface.md
