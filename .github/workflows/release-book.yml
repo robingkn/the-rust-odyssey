@@ -43,7 +43,9 @@ jobs:
 
       - name: Build PDF
         run: |
-          pandoc -f markdown $(cat book/book.txt) \
+          pandoc \
+            --include-before-body=book/00-cover.tex \
+            $(cat book/book.txt | grep -v '00-cover.tex') \
             --pdf-engine=xelatex \
             --include-in-header=book/pandoc-header.tex \
             --metadata title="The Rust Odyssey" \
