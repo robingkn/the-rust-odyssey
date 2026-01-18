@@ -108,7 +108,7 @@ error[E0382]: borrow of moved value: `s`
 4 |     println!("{}", s);
   |                    ^ value borrowed here after move
   |
-  = note: this error originates in the macro `$crate::format_args_nl` which comes from the expansion of the macro `println` (in Nightly builds, run with -Z macro-backtrace for more info)
+  = note: this error originates in the macro `\$crate::format_args_nl` which comes from the expansion of the macro `println` (in Nightly builds, run with -Z macro-backtrace for more info)
 help: consider cloning the value if the performance cost is acceptable
   |
 3 |     let s2 = s.clone();
