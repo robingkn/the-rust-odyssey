@@ -57,6 +57,8 @@ jobs:
           pandoc $(cat book/book.txt) \
             --toc \
             --epub-cover-image=book/assets/cover.png \
+            --metadata title="The Rust Odyssey" \
+            --metadata author="Robin George Koshy" \
             -f markdown-smart \
             -o dist/${BOOK_NAME}-${{ github.ref_name }}.epub
 
@@ -67,6 +69,8 @@ jobs:
           pandoc $(cat book/book.txt) \
             --standalone \
             --toc \
+            --metadata title="The Rust Odyssey" \
+            --metadata author="Robin George Koshy" \
             -f markdown-smart \
             -o dist/html/index.html
 
