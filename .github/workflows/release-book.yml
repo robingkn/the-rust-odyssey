@@ -46,6 +46,7 @@ jobs:
           pandoc \
             --include-before-body=book/00-cover.tex \
             $(cat book/book.txt | grep -v '00-cover.tex') \
+            -f markdown \
             --pdf-engine=xelatex \
             --include-in-header=book/pandoc-header.tex \
             --metadata title="The Rust Odyssey" \
@@ -55,11 +56,11 @@ jobs:
       - name: Build EPUB
         run: |
           pandoc $(cat book/book.txt) \
+            -f markdown \
             --toc \
             --epub-cover-image=book/assets/cover.png \
             --metadata title="The Rust Odyssey" \
             --metadata author="Robin George Koshy" \
-            -f markdown-smart \
             -o dist/${BOOK_NAME}-${{ github.ref_name }}.epub
 
       - name: Build HTML
@@ -67,11 +68,11 @@ jobs:
           mkdir -p dist/html/book/assets
           cp -r book/assets/* dist/html/book/assets/
           pandoc $(cat book/book.txt) \
+            -f markdown \
             --standalone \
             --toc \
             --metadata title="The Rust Odyssey" \
             --metadata author="Robin George Koshy" \
-            -f markdown-smart \
             -o dist/html/index.html
 
       - name: Zip HTML
