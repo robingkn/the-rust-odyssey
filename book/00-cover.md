@@ -3,15 +3,10 @@ title: "The Rust Odyssey"
 author: "Robin George Koshy"
 ---
 ```{=latex}
-\coverpage
-\begin{center}
-\vspace*{-1in}
-\includegraphics[
-  width=\paperwidth,
-  height=\paperheight,
-  keepaspectratio
-]{book/assets/cover.png}
-\end{center}
+\newgeometry{margin=0pt}
+\thispagestyle{empty}
+\AddToShipoutPictureBG*{\BackgroundPic{book/assets/cover.png}}
+\mbox{}
 \clearpage
-\restoremargings
+\restoregeometry
 ```

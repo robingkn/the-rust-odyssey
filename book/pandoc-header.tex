@@ -1,13 +1,13 @@
 \usepackage{graphicx}
 \usepackage{geometry}
+\usepackage{eso-pic}
 
-% Remove all margins for cover page
-\newcommand{\coverpage}{%
-  \newgeometry{margin=0in}
-  \thispagestyle{empty}
-}
-
-% Restore normal margins
-\newcommand{\restoremargings}{%
-  \restoregeometry
-}
+% Command to add full-bleed background image
+\newcommand\BackgroundPic[1]{%
+\put(0,0){%
+\parbox[b][\paperheight]{\paperwidth}{%
+\vfill
+\centering
+\includegraphics[width=\paperwidth,height=\paperheight,keepaspectratio=false]{#1}%
+\vfill
+}}}
