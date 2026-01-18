@@ -55,6 +55,7 @@ jobs:
         run: |
           pandoc $(cat book/book.txt | grep '\.md$') \
             --toc \
+            --metadata lang=en \
             --epub-cover-image=book/assets/cover.png \
             --metadata title="The Rust Odyssey" \
             --metadata author="Robin George Koshy" \
