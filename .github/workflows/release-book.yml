@@ -56,6 +56,8 @@ jobs:
         run: |
           pandoc $(cat book/book.txt) \
             --toc \
+            --epub-cover-image=book/assets/cover.png \
+            -f markdown-smart \
             -o dist/${BOOK_NAME}-${{ github.ref_name }}.epub
 
       - name: Build HTML
@@ -65,6 +67,7 @@ jobs:
           pandoc $(cat book/book.txt) \
             --standalone \
             --toc \
+            -f markdown-smart \
             -o dist/html/index.html
 
       - name: Zip HTML
