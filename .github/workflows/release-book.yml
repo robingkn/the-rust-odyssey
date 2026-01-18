@@ -45,8 +45,7 @@ jobs:
         run: |
           pandoc $(cat book/book.txt) \
             --toc \
-            --pdf-engine=xelatex \
-            --include-in-header=book/pandoc-header.tex \
+            --pdf-engine=xelatex \           
             -o dist/${BOOK_NAME}-${{ github.ref_name }}.pdf
 
       - name: Build EPUB
