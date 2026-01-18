@@ -21,7 +21,7 @@ HTML / EPUB:
 \begin{center}
 \centering
 \vspace*{2cm}
-\includegraphics[width=0.7\textwidth]{assets/cover.png}
+\includegraphics[width=0.7\textwidth]{book/assets/cover.png}
 \end{center}
 
 \newpage
